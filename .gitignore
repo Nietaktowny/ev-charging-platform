@@ -8,4 +8,4 @@ __pycache__/
 .pyenv
 
 # kaggle API key
-#data/kaggle/kaggle.json
+data/kaggle/kaggle.json
