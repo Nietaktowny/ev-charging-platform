@@ -1,6 +1,6 @@
 from dagster import Definitions
-from src.assets.placeholder_asset_to_start import hello_asset
+from src.assets.ingest import kaggle_raw_ev_charging_dataset
 
 defs = Definitions(
-    assets=[hello_asset],
+    assets=[kaggle_raw_ev_charging_dataset],
 )
