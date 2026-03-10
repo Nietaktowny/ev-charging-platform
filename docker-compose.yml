@@ -1,0 +1,128 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ev_postgres
+    environment:
+      POSTGRES_USER: ${DAGSTER_PG_USER}
+      POSTGRES_PASSWORD: ${DAGSTER_PG_PASSWORD}
+      POSTGRES_DB: ${DAGSTER_PG_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DAGSTER_PG_USER} -d ${DAGSTER_PG_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mysql:
+    image: mysql:8.4
+    container_name: ev_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_APP_USER}
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD}
+    ports:
+      - "3307:3306"
+    command: >
+      mysqld
+      --mysql-native-password=ON
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${MYSQL_APP_USER} -p${MYSQL_APP_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  user_code:
+    build:
+      context: .
+      dockerfile: orchestration/Dockerfile
+    container_name: ev_user_code
+    env_file:
+      - .env
+    environment:
+      DAGSTER_CURRENT_IMAGE: ev_user_code:latest
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      PYTHONPATH: /opt/dagster/app
+      KAGGLE_CONFIG_DIR: /opt/dagster/kaggle
+    volumes:
+      - ./src:/opt/dagster/app/src
+      - ./dagster_home:/opt/dagster/dagster_home
+      - ./data:/opt/dagster/app/data
+      - ./orchestration/workspace.yaml:/opt/dagster/app/workspace.yaml
+      - ./.kaggle:/opt/dagster/kaggle:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    working_dir: /opt/dagster/app
+    command: >
+      dagster api grpc
+      -h 0.0.0.0
+      -p 4000
+      -m src.definitions
+    ports:
+      - "4000:4000"
+
+  dagster_webserver:
+    build:
+      context: .
+      dockerfile: orchestration/Dockerfile
+    container_name: ev_dagster_webserver
+    env_file:
+      - .env
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      PYTHONPATH: /opt/dagster/app
+    volumes:
+      - ./src:/opt/dagster/app/src
+      - ./dagster_home:/opt/dagster/dagster_home
+      - ./data:/opt/dagster/app/data
+      - ./orchestration/workspace.yaml:/opt/dagster/app/workspace.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user_code:
+        condition: service_started
+    working_dir: /opt/dagster/app
+    command: >
+      dagster-webserver
+      -h 0.0.0.0
+      -p 3000
+      -w /opt/dagster/app/workspace.yaml
+    ports:
+      - "3000:3000"
+
+  dagster_daemon:
+    build:
+      context: .
+      dockerfile: orchestration/Dockerfile
+    container_name: ev_dagster_daemon
+    env_file:
+      - .env
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      PYTHONPATH: /opt/dagster/app
+    volumes:
+      - ./src:/opt/dagster/app/src
+      - ./dagster_home:/opt/dagster/dagster_home
+      - ./data:/opt/dagster/app/data
+      - ./orchestration/workspace.yaml:/opt/dagster/app/workspace.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user_code:
+        condition: service_started
+    working_dir: /opt/dagster/app
+    command: dagster-daemon run
+
+volumes:
+  postgres_data:
+  mysql_data:

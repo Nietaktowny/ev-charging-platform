@@ -1,0 +1,18 @@
+storage:
+  postgres:
+    postgres_db:
+      hostname: postgres
+      port: 5432
+      username:
+        env: DAGSTER_POSTGRES_USER
+      password:
+        env: DAGSTER_POSTGRES_PASSWORD
+      db_name:
+        env: DAGSTER_POSTGRES_DB
+
+run_launcher:
+  module: dagster
+  class: DefaultRunLauncher
+
+telemetry:
+  enabled: false
