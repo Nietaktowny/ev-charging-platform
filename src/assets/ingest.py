@@ -20,5 +20,5 @@ def kaggle_raw_ev_charging_dataset(context) -> str:
 
     context.log.info(f"Dataset downloaded to: {path}")
     return dg.MaterializeResult(
-        value=str(path)
+        value=str(output_dir / "ev_charging_station_usage_grid_load.csv"),
     )
