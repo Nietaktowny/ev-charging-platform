@@ -64,7 +64,7 @@ services:
         condition: service_healthy
     working_dir: /opt/dagster/app
     command: >
-      dagster api grpc
+      dagster code-server start
       -h 0.0.0.0
       -p 4000
       -m src.definitions
