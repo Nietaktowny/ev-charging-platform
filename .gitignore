@@ -8,4 +8,12 @@ __pycache__/
 .pyenv
 
 # kaggle API key
-data/kaggle/kaggle.json
+.kaggle
+
+
+# data volume
+data
+
+# Ignore all dagster local execution artifacts, but keep the config file
+dagster_home/*
+!dagster_home/dagster.yaml
