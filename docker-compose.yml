@@ -56,7 +56,7 @@ services:
       - ./dagster_home:/opt/dagster/dagster_home
       - ./data:/opt/dagster/app/data
       - ./orchestration/workspace.yaml:/opt/dagster/app/workspace.yaml
-      - ./.kaggle:/opt/dagster/kaggle:ro
+      - ./.kaggle/access_token:/root/.kaggle/access_token:ro
     depends_on:
       postgres:
         condition: service_healthy
