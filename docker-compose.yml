@@ -31,6 +31,7 @@ services:
       --mysql-native-password=ON
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
+      --local-infile=1
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
