@@ -1,10 +1,11 @@
 from dagster import Definitions
 from src.assets.ingest import kaggle_raw_ev_charging_dataset
-from src.assets.bronze import ev_data_landing
+from src.assets.bronze import ev_charging_data_landing
+from src.assets.silver import dim_city_zones, dim_station_types, dim_peak_load_risk_levels, fact_charging_data
 from src.resources.mysql import MySQLResource
 import os
 
-assets = [kaggle_raw_ev_charging_dataset, ev_data_landing]
+assets = [kaggle_raw_ev_charging_dataset, ev_charging_data_landing, dim_city_zones, dim_station_types, dim_peak_load_risk_levels, fact_charging_data]
 
 resources = {
         "mysql": MySQLResource(
