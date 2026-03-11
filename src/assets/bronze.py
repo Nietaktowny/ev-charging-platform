@@ -1,10 +1,8 @@
 import dagster as dg
 from sqlalchemy import text
 from pathlib import Path
-import pandas as pd
 
 from ..resources.mysql import MySQLResource
-from .ingest import kaggle_raw_ev_charging_dataset
 
 
 @dg.asset(
@@ -25,7 +23,7 @@ def ev_charging_data_landing(context, mysql: MySQLResource, kaggle_raw_ev_chargi
                 avg_charging_duration_minutes DECIMAL(10, 2) NOT NULL,
                 energy_dispensed_kwh DECIMAL(10, 2) NOT NULL,
                 grid_load_mw DECIMAL(10, 2) NOT NULL,
-                renewable_energy_used_percenet DECIMAL(5, 2) NOT NULL,
+                renewable_energy_used_percent DECIMAL(5, 2) NOT NULL,
                 peak_load_risk VARCHAR(15) NOT NULL,
                 CONSTRAINT ev_charging_data_landing_pk PRIMARY KEY (id),
                 INDEX ev_charging_data_landing_station_type_IDX (station_type),
@@ -56,7 +54,7 @@ def ev_charging_data_landing(context, mysql: MySQLResource, kaggle_raw_ev_chargi
                 avg_charging_duration_minutes,
                 energy_dispensed_kwh,
                 grid_load_mw,
-                renewable_energy_used_percenet,
+                renewable_energy_used_percent,
                 peak_load_risk
             )
         """)
