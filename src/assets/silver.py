@@ -11,11 +11,11 @@ def dim_city_zones(context, mysql: MySQLResource):
     engine = mysql.get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS ev_platform.city_zones_dim (
+            CREATE TABLE IF NOT EXISTS ev_platform.dim_city_zones (
                 id SMALLINT UNSIGNED auto_increment NOT NULL,
                 city_zone varchar(32) NOT NULL,
-                CONSTRAINT city_zones_dim_pk PRIMARY KEY (id),
-                CONSTRAINT city_zones_dim_unique UNIQUE KEY (city_zone)
+                CONSTRAINT dim_city_zones_pk PRIMARY KEY (id),
+                CONSTRAINT dim_city_zones_unique UNIQUE KEY (city_zone)
             )
             ENGINE=InnoDB
             DEFAULT CHARSET=utf8mb4
@@ -23,13 +23,13 @@ def dim_city_zones(context, mysql: MySQLResource):
         """))
         
         result = conn.execute(text("""
-            INSERT IGNORE INTO city_zones_dim (city_zone)
+            INSERT IGNORE INTO dim_city_zones (city_zone)
             SELECT DISTINCT city_zone FROM ev_charging_data_landing;
         """
         ))
         
         
-        context.log.info(f"Inserted {result.rowcount} new city zones into city_zones_dim")
+        context.log.info(f"Inserted {result.rowcount} new city zones into dim_city_zones")
         return dg.MaterializeResult(
             metadata={"new_city_zones": result.rowcount},
         )
@@ -42,11 +42,11 @@ def dim_station_types(context, mysql: MySQLResource):
     engine = mysql.get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS ev_platform.station_types_dim (
+            CREATE TABLE IF NOT EXISTS ev_platform.dim_station_types (
                 id SMALLINT UNSIGNED auto_increment NOT NULL,
                 station_type varchar(32) NOT NULL,
-                CONSTRAINT station_types_dim_pk PRIMARY KEY (id),
-                CONSTRAINT station_types_dim_unique UNIQUE KEY (station_type)
+                CONSTRAINT dim_station_types_pk PRIMARY KEY (id),
+                CONSTRAINT dim_station_types_unique UNIQUE KEY (station_type)
             )
             ENGINE=InnoDB
             DEFAULT CHARSET=utf8mb4
@@ -54,13 +54,13 @@ def dim_station_types(context, mysql: MySQLResource):
         """))
         
         result = conn.execute(text("""
-            INSERT IGNORE INTO station_types_dim (station_type)
+            INSERT IGNORE INTO dim_station_types (station_type)
             SELECT DISTINCT station_type FROM ev_charging_data_landing;
         """
         ))
         
         
-        context.log.info(f"Inserted {result.rowcount} new station types into station_types_dim")
+        context.log.info(f"Inserted {result.rowcount} new station types into dim_station_types")
         return dg.MaterializeResult(
             metadata={"new_station_types": result.rowcount},
         )
@@ -73,11 +73,11 @@ def dim_peak_load_risk_levels(context, mysql: MySQLResource):
     engine = mysql.get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS ev_platform.peak_load_risk_levels_dim (
+            CREATE TABLE IF NOT EXISTS ev_platform.dim_peak_load_risk_levels (
                 id SMALLINT UNSIGNED auto_increment NOT NULL,
                 peak_load_risk varchar(15) NOT NULL,
-                CONSTRAINT peak_load_risk_levels_dim_pk PRIMARY KEY (id),
-                CONSTRAINT peak_load_risk_levels_dim_unique UNIQUE KEY (peak_load_risk)
+                CONSTRAINT dim_peak_load_risk_levels PRIMARY KEY (id),
+                CONSTRAINT dim_peak_load_risk_levels UNIQUE KEY (peak_load_risk)
             )
             ENGINE=InnoDB
             DEFAULT CHARSET=utf8mb4
@@ -85,13 +85,13 @@ def dim_peak_load_risk_levels(context, mysql: MySQLResource):
         """))
         
         result = conn.execute(text("""
-            INSERT IGNORE INTO peak_load_risk_levels_dim (peak_load_risk)
+            INSERT IGNORE INTO dim_peak_load_risk_levels (peak_load_risk)
             SELECT DISTINCT peak_load_risk FROM ev_charging_data_landing;
         """
         ))
         
         
-        context.log.info(f"Inserted {result.rowcount} new peak load risks into peak_load_risk_levels_dim")
+        context.log.info(f"Inserted {result.rowcount} new peak load risks into dim_peak_load_risk_levels")
         return dg.MaterializeResult(
             metadata={"new_peak_load_risks_levels": result.rowcount},
         )
@@ -122,9 +122,9 @@ def fact_charging_data(context, mysql: MySQLResource):
                 peak_load_risk_level_id SMALLINT UNSIGNED NOT NULL,
                 CONSTRAINT fact_charging_data_pk PRIMARY KEY (id),
                 CONSTRAINT fact_charging_data_unique UNIQUE KEY (station_type_id,city_zone_id,ingest_datetime),
-                CONSTRAINT fact_charging_data_city_zones_dim_FK FOREIGN KEY (city_zone_id) REFERENCES ev_platform.city_zones_dim(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-                CONSTRAINT fact_charging_data_station_types_dim_FK FOREIGN KEY (station_type_id) REFERENCES ev_platform.station_types_dim(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-                CONSTRAINT fact_charging_data_peak_load_risk_levels_dim_FK FOREIGN KEY (peak_load_risk_level_id) REFERENCES ev_platform.peak_load_risk_levels_dim(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+                CONSTRAINT fact_charging_data_city_zones_dim_FK FOREIGN KEY (city_zone_id) REFERENCES ev_platform.dim_city_zones(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+                CONSTRAINT fact_charging_data_station_types_dim_FK FOREIGN KEY (station_type_id) REFERENCES ev_platform.dim_station_types(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+                CONSTRAINT fact_charging_data_peak_load_risk_levels_dim_FK FOREIGN KEY (peak_load_risk_level_id) REFERENCES ev_platform.dim_peak_load_risk_levels(id) ON DELETE RESTRICT ON UPDATE RESTRICT
             )
             ENGINE=InnoDB
             DEFAULT CHARSET=utf8mb4
@@ -154,11 +154,11 @@ def fact_charging_data(context, mysql: MySQLResource):
                 l.renewable_energy_used_percent,
                 pr.id AS peak_load_risk_level_id
             FROM ev_charging_data_landing l
-            INNER JOIN station_types_dim st
+            INNER JOIN dim_station_types st
                 ON st.station_type = l.station_type
-            INNER JOIN city_zones_dim cz
+            INNER JOIN dim_city_zones cz
                 ON cz.city_zone = l.city_zone
-            INNER JOIN peak_load_risk_levels_dim pr
+            INNER JOIN dim_peak_load_risk_levels pr
                 ON pr.peak_load_risk = l.peak_load_risk;
         """))
         
