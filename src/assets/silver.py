@@ -25,8 +25,8 @@ def dim_city_zones(context, mysql: MySQLResource):
         
         result = conn.execute(text("""
             INSERT INTO dim_city_zones (city_zone)
-            SELECT DISTINCT city_zone FROM ev_charging_data_landing
-            ON DUPLICATE KEY UPDATE city_zone = city_zone, last_updated = CURRENT_TIMESTAMP;
+            SELECT DISTINCT city_zone FROM ev_charging_data_landing as l
+            ON DUPLICATE KEY UPDATE city_zone = l.city_zone, last_updated = CURRENT_TIMESTAMP;
         """
         ))
         
@@ -58,8 +58,8 @@ def dim_station_types(context, mysql: MySQLResource):
         
         result = conn.execute(text("""
             INSERT INTO dim_station_types (station_type)
-            SELECT DISTINCT station_type FROM ev_charging_data_landing
-            ON DUPLICATE KEY UPDATE station_type = station_type, last_updated = CURRENT_TIMESTAMP;
+            SELECT DISTINCT station_type FROM ev_charging_data_landing as l
+            ON DUPLICATE KEY UPDATE station_type = l.station_type, last_updated = CURRENT_TIMESTAMP;
         """
         ))
         
@@ -92,8 +92,8 @@ def dim_peak_load_risk_levels(context, mysql: MySQLResource):
         
         result = conn.execute(text("""
             INSERT INTO dim_peak_load_risk_levels (peak_load_risk)
-            SELECT DISTINCT peak_load_risk FROM ev_charging_data_landing
-            ON DUPLICATE KEY UPDATE peak_load_risk = peak_load_risk, last_updated = CURRENT_TIMESTAMP;
+            SELECT DISTINCT peak_load_risk FROM ev_charging_data_landing as l
+            ON DUPLICATE KEY UPDATE peak_load_risk = l.peak_load_risk, last_updated = CURRENT_TIMESTAMP;
         """
         ))
         
@@ -129,7 +129,7 @@ def fact_charging_data(context, mysql: MySQLResource):
                 peak_load_risk_level_id SMALLINT UNSIGNED NOT NULL,
                 ingest_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 CONSTRAINT fact_charging_data_pk PRIMARY KEY (id),
-                CONSTRAINT fact_charging_data_unique UNIQUE KEY (station_type_id,city_zone_id,ingest_datetime),
+                CONSTRAINT fact_charging_data_unique UNIQUE KEY (station_type_id,city_zone_id,src_ingest_datetime),
                 CONSTRAINT fact_charging_data_city_zones_dim_FK FOREIGN KEY (city_zone_id) REFERENCES ev_platform.dim_city_zones(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
                 CONSTRAINT fact_charging_data_station_types_dim_FK FOREIGN KEY (station_type_id) REFERENCES ev_platform.dim_station_types(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
                 CONSTRAINT fact_charging_data_peak_load_risk_levels_dim_FK FOREIGN KEY (peak_load_risk_level_id) REFERENCES ev_platform.dim_peak_load_risk_levels(id) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -143,7 +143,7 @@ def fact_charging_data(context, mysql: MySQLResource):
             INSERT IGNORE INTO fact_charging_data (
                 station_type_id,
                 city_zone_id,
-                ingest_datetime,
+                src_ingest_datetime,
                 vehicles_charged,
                 avg_charging_duration_minutes,
                 energy_dispensed_kwh,
