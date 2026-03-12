@@ -17,7 +17,7 @@ def ev_charging_data_landing(context, mysql: MySQLResource, kaggle_raw_ev_chargi
             CREATE TABLE IF NOT EXISTS ev_platform.ev_charging_data_landing (
                 id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
                 ingest_datetime DATETIME NOT NULL,
-                city_zone VARCHAR(32) NULL,
+                city_zone VARCHAR(32) NOT NULL,
                 station_type VARCHAR(32) NOT NULL,
                 vehicles_charged SMALLINT UNSIGNED NOT NULL,
                 avg_charging_duration_minutes DECIMAL(10, 2) NOT NULL,
