@@ -24,8 +24,9 @@ def dim_city_zones(context, mysql: MySQLResource):
         """))
         
         result = conn.execute(text("""
-            INSERT IGNORE INTO dim_city_zones (city_zone)
-            SELECT DISTINCT city_zone FROM ev_charging_data_landing;
+            INSERT INTO dim_city_zones (city_zone)
+            SELECT DISTINCT city_zone FROM ev_charging_data_landing
+            ON DUPLICATE KEY UPDATE city_zone = city_zone, last_updated = CURRENT_TIMESTAMP;
         """
         ))
         
@@ -56,8 +57,9 @@ def dim_station_types(context, mysql: MySQLResource):
         """))
         
         result = conn.execute(text("""
-            INSERT IGNORE INTO dim_station_types (station_type)
-            SELECT DISTINCT station_type FROM ev_charging_data_landing;
+            INSERT INTO dim_station_types (station_type)
+            SELECT DISTINCT station_type FROM ev_charging_data_landing
+            ON DUPLICATE KEY UPDATE station_type = station_type, last_updated = CURRENT_TIMESTAMP;
         """
         ))
         
@@ -89,8 +91,9 @@ def dim_peak_load_risk_levels(context, mysql: MySQLResource):
         """))
         
         result = conn.execute(text("""
-            INSERT IGNORE INTO dim_peak_load_risk_levels (peak_load_risk)
-            SELECT DISTINCT peak_load_risk FROM ev_charging_data_landing;
+            INSERT INTO dim_peak_load_risk_levels (peak_load_risk)
+            SELECT DISTINCT peak_load_risk FROM ev_charging_data_landing
+            ON DUPLICATE KEY UPDATE peak_load_risk = peak_load_risk, last_updated = CURRENT_TIMESTAMP;
         """
         ))
         
